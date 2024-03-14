@@ -4,6 +4,8 @@ import Chart from "react-apexcharts";
 
 const Graph = () => {
   const [chartData, setChartData] = useState({});
+  const [totalRequests, setTotalRequests] = useState(0);
+  const [uniqueDepartments, setUniqueDepartments] = useState([]);
 
   useEffect(() => {
     fetchData();
@@ -17,6 +19,8 @@ const Graph = () => {
       const data = response.data.requests;
       const hotels = generateChartData(data);
       setChartData(hotels);
+      calculateTotalRequests(data);
+      calculateUniqueDepartments(data);
     } catch (error) {
       console.error("Error fetching data:", error);
     }
@@ -37,9 +41,16 @@ const Graph = () => {
       options: {
         chart: {
           id: "requests-per-hotel",
+          toolbar: {
+            show: false,
+          },
         },
         xaxis: {
           categories: Object.keys(hotels),
+        },
+        yaxis: {
+          min: 0,
+          stepSize: 2,
         },
       },
       series: [
@@ -51,10 +62,21 @@ const Graph = () => {
     };
   };
 
+  const calculateTotalRequests = (data) => {
+    setTotalRequests(data.length);
+  };
+
+  const calculateUniqueDepartments = (data) => {
+    const uniqueDepartmentsSet = new Set();
+    data.forEach((request) => {
+      uniqueDepartmentsSet.add(request.desk.name);
+    });
+    setUniqueDepartments(Array.from(uniqueDepartmentsSet));
+  };
 
   return (
-    <div className="container mx-auto py-8">
-      <h1 className="text-3xl font-bold mb-4">Requests per Hotel</h1>
+    <div className="container mx-auto py-8 border border-dashed border-gray-600 rounded-md">
+      <h1 className="text-2xl text-center font-semibold mb-4">Requests per Hotel</h1>
       <div>
         {chartData.options && chartData.series && (
           <Chart
@@ -64,6 +86,17 @@ const Graph = () => {
             height={400}
           />
         )}
+      </div>
+      <div className="text-center">
+        <p className="my-2">Total requests:{totalRequests}</p>
+        <span>
+          List of <i>unique</i> department names across all Hotels:
+          {uniqueDepartments.map((department, index) => (
+            <span key={index} className="m-1">
+              {department},
+            </span>
+          ))}
+        </span>
       </div>
     </div>
   );
